@@ -1,21 +1,14 @@
-import { RouteDefinition } from '@/interfaces/routes.interface';
+import { NextFunction, Request, Response } from 'express';
+import repoRoutes from '@/models/repoRoutes.model';
 
 class RepoController {
-  public async index(): Promise<RouteDefinition[]> {
-    return [
-      {
-        path: '/',
-      },
-      {
-        path: '/:owner/:repo/pulls',
-        description: 'Returns info about pull requests in a repository',
-      },
-      {
-        path: '/:owner/:repo/pulls/:state',
-        description: 'Returns info about pull requests in a repository, filtered by pull request state (open, closed, or all)',
-      },
-    ];
-  }
+  public index = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      res.status(200).json({ data: repoRoutes, message: 'index' });
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 export default RepoController;
