@@ -12,7 +12,7 @@ class RepoRoutes implements Routes {
   }
 
   private initializeRoutes() {
-    return;
+    this.router.get(`${this.path}`, this.repoController.index);
   }
 }
 
