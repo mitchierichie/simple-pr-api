@@ -1,9 +1,11 @@
 import { Router } from 'express';
 import { Routes } from '@interfaces/routes.interface';
+import RepoController from '@/controllers/repo.controller';
 
-class UsersRoute implements Routes {
+class RepoRoutes implements Routes {
   public path = '/repos';
   public router = Router();
+  public repoController = new RepoController();
 
   constructor() {
     this.initializeRoutes();
@@ -14,4 +16,4 @@ class UsersRoute implements Routes {
   }
 }
 
-export default UsersRoute;
+export default RepoRoutes;
