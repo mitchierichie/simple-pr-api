@@ -1,6 +1,9 @@
 import { IncomingMessage } from 'http';
 import https from 'https';
 import { URL } from 'url';
+import RepoService from './repo.service';
+
+declare type RequestOptions = string | https.RequestOptions | URL;
 
 class HttpsService {
   private body = [];
@@ -21,20 +24,47 @@ class HttpsService {
 
   private parseBody() {
     const stringBody = Buffer.concat(this.body).toString();
+    console.log('parseBody:stringBody', stringBody);
     const parsedBody = JSON.parse(stringBody);
 
     return parsedBody;
   }
 
-  public async get(options: string | https.RequestOptions | URL): Promise<any> {
+  public async get(options: RequestOptions): Promise<any> {
     return new Promise((resolve, reject) => {
+      // promisify the request
+
       const request = https.get(options, (response: IncomingMessage) => {
         this.dataCallback(response);
         this.endCallback(response, resolve);
+
+        if (response.headers.etag) {
+          this.saveETag(options, response.headers.etag);
+        }
       });
+
       request.on('error', error => this.errorCallback(error, reject));
       request.end();
     });
+  }
+
+  private saveETag(options: RequestOptions, etag: string) {
+    const path = this.normalizePath(options);
+    RepoService.addETag(path, etag);
+  }
+
+  private normalizePath(options: RequestOptions) {
+    if (typeof options === 'string') {
+      return options;
+    }
+
+    if ('path' in options) {
+      return options.path;
+    }
+
+    if ('pathname' in options) {
+      return options.pathname;
+    }
   }
 }
 

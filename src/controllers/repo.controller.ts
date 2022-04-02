@@ -15,8 +15,8 @@ class RepoController {
 
   public getPulls: RouteFunction = async (req, res, next): Promise<void> => {
     try {
-      const { owner, repo, state } = req.params;
-      const pulls = await this.repoService.getPulls(owner, repo, state as PullRequestState | undefined);
+      const { owner, repo } = req.params;
+      const pulls = await this.repoService.getPulls(owner, repo);
 
       res.status(200).json({ data: pulls, message: 'getPulls' });
     } catch (error) {
