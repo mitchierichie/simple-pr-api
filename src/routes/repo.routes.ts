@@ -5,15 +5,15 @@ import RepoController from '@/controllers/repo.controller';
 class RepoRoutes implements Routes {
   public path = '/repos';
   public router = Router();
-  public repoController = new RepoController();
+  public controller = new RepoController();
 
   constructor() {
     this.initializeRoutes();
   }
 
   private initializeRoutes() {
-    this.router.get(`${this.path}`, this.repoController.index);
-    this.router.get(`${this.path}/:owner/:repo/pulls`, this.repoController.getPulls);
+    this.router.get(`${this.path}`, this.controller.index);
+    this.router.get(`${this.path}/:owner/:repo/pulls`, this.controller.getPulls);
   }
 }
 

@@ -5,7 +5,9 @@ declare interface BaseRouteDefinition {
 }
 
 export interface Routes extends BaseRouteDefinition {
+  path: string;
   router: Router;
+  controller: Object;
 }
 
 export interface RouteDefinition extends BaseRouteDefinition {
