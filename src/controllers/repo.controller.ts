@@ -1,6 +1,6 @@
 import repoRoutes from '@/models/repoRoutes.model';
 import { RouteFunction } from '@/interfaces/routes.interface';
-import RepoService, { PullRequestState } from '@/services/repo.service';
+import RepoService from '@/services/repo.service';
 
 class RepoController {
   private repoService = new RepoService();
