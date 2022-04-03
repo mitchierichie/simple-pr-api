@@ -1,15 +1,40 @@
-class CacheService {
-  private static eTags = {};
+import NodeCache, { Key } from 'node-cache';
 
-  public static addETag(path: string, etag: string) {
-    this.eTags[path] = etag;
+const secondsInAnHour = 3600;
+const oneHundredThousand = 100000;
+
+class CacheService {
+  private static nodeCache = new NodeCache({
+    stdTTL: secondsInAnHour,
+    maxKeys: oneHundredThousand,
+  });
+
+  public static has(key: Key) {
+    return this.nodeCache.has(key);
   }
 
-  public static getETag(path: string) {
-    const eTag = `${this.eTags[path]}`;
-    delete this.eTags[path];
+  public static set(key: Key, value: any) {
+    return this.nodeCache.set(key, value);
+  }
 
-    return eTag;
+  public static get<Type>(key: Key) {
+    return this.nodeCache.get<Type>(key);
+  }
+
+  public static getMultiple(keys: Key[]) {
+    return this.nodeCache.mget(keys);
+  }
+
+  public static getAll() {
+    return this.nodeCache.mget(this.nodeCache.keys());
+  }
+
+  public static stats() {
+    return this.nodeCache.getStats();
+  }
+
+  public static isKey(key: any) {
+    return ['string', 'number'].includes(typeof key);
   }
 }
 
