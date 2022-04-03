@@ -1,6 +1,10 @@
 import { config } from 'dotenv';
-config({ path: `.env.${process.env.NODE_ENV || 'development'}.local` });
+const envFileModifier = process.env.NODE_ENV || 'development';
+config({ path: `.env.${envFileModifier}.local` });
 
-export const GITHUB_TOKEN = Buffer.from(process.env.GITHUB_USERNAME + ':' + process.env.GITHUB_TOKEN).toString('base64');
+const { NODE_ENV, PORT, SECRET_KEY, LOG_FORMAT, LOG_DIR, ORIGIN, GITHUB_USERNAME } = process.env;
+const GITHUB_TOKEN_RAW = GITHUB_USERNAME + ':' + process.env.GITHUB_TOKEN;
+const GITHUB_HAS_TOKEN = Boolean(GITHUB_USERNAME) && GITHUB_TOKEN_RAW !== GITHUB_USERNAME + ':';
+const GITHUB_TOKEN = Buffer.from(GITHUB_TOKEN_RAW).toString('base64');
 
-export const { NODE_ENV, PORT, SECRET_KEY, LOG_FORMAT, LOG_DIR, ORIGIN } = process.env;
+export { NODE_ENV, PORT, SECRET_KEY, LOG_FORMAT, LOG_DIR, ORIGIN, GITHUB_USERNAME, GITHUB_HAS_TOKEN, GITHUB_TOKEN };
