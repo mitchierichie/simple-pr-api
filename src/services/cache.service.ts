@@ -5,7 +5,6 @@ const oneHundredThousand = 100000;
 
 class CacheService {
   private static nodeCache = new NodeCache({
-    // comment for commit
     stdTTL: secondsInAnHour,
     maxKeys: oneHundredThousand,
   });
