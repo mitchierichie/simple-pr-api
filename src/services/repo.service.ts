@@ -1,20 +1,16 @@
-import { GITHUB_TOKEN } from '@/config';
 import { CacheHitResponse } from '@/interfaces/https.interface';
 import { PullRequestDetail } from '@/interfaces/pull.interface';
 import { NormalizedPullRequest, NormalizedPullRequests, PullRequests } from '@/interfaces/pulls.interface';
 import HttpsService from '@services/https.service';
 import { OutgoingHttpHeader } from 'http';
-import { RequestOptions } from 'https';
-import { Key } from 'node-cache';
-import qs from 'qs';
-import CacheService from './cache.service';
+import QueryString from 'qs';
+import CacheService, { CacheKey } from './cache.service';
+import GitHubService from './github.service';
 
-const GITHUB_API_BASE_URL = 'api.github.com';
-
-declare type PullPathFunction<Type> = (owner: string, repo: string, query?: qs.ParsedQs) => Type;
+declare type PullPathFunction<Type> = (owner: string, repo: string, query?: QueryString.ParsedQs) => Type;
 declare type PullsResponse = PullRequests | CacheHitResponse<NormalizedPullRequests>;
 
-class RepoService {
+class RepoService extends GitHubService {
   public getPulls: PullPathFunction<Promise<string | NormalizedPullRequests>> = async (owner, repo, query) => {
     const path = this.buildPath(owner, repo, query);
     const options = this.mergeRequestOptions({
@@ -34,25 +30,10 @@ class RepoService {
       return path;
     }
 
-    return `${path}?${qs.stringify(query)}`;
+    return this.addQueryToPath(path, query);
   };
 
-  private mergeRequestOptions(options: { path: string; body?: string }) {
-    const mergedOptions = {
-      hostname: GITHUB_API_BASE_URL,
-      port: 443,
-      headers: {
-        Accept: 'application/vnd.github.v3+json',
-        'User-Agent': 'mitchieriche/simple-pr-api',
-        Authorization: `Basic ${GITHUB_TOKEN}`,
-      },
-      ...options,
-    };
-
-    return this.tryToMergeETag(mergedOptions);
-  }
-
-  private async normalizePullsResponse(pullsResponse: PullsResponse, path: Key): Promise<string | NormalizedPullRequests> {
+  private async normalizePullsResponse(pullsResponse: PullsResponse, path: CacheKey): Promise<string | NormalizedPullRequests> {
     if (typeof pullsResponse === 'string') {
       return pullsResponse;
     }
@@ -82,7 +63,7 @@ class RepoService {
       const normalizedPulls = pullsDetails.map(this.normalizePull);
 
       if (CacheService.isKey(eTag)) {
-        CacheService.set(eTag as Key, normalizedPulls);
+        CacheService.set(eTag as CacheKey, normalizedPulls);
       }
 
       return normalizedPulls;
@@ -94,7 +75,7 @@ class RepoService {
 
     return httpsService.get(
       this.mergeRequestOptions({
-        path: pull.url.replace(this.createGitHubPathRegex, '/'),
+        path: pull.url.replace(this.createPathRegex, '/'),
       }),
     );
   }
@@ -106,20 +87,6 @@ class RepoService {
     author: pullDetails.user?.login,
     commit_count: pullDetails.commits,
   });
-
-  private createGitHubPathRegex() {
-    return new RegExp(`/^https:\/\/${GITHUB_API_BASE_URL}\/`);
-  }
-
-  private tryToMergeETag(options: RequestOptions) {
-    const eTag = CacheService.get<Key>(options.path);
-
-    if (eTag && CacheService.isKey(eTag) && CacheService.has(eTag)) {
-      options.headers['If-None-Match'] = eTag;
-    }
-
-    return options;
-  }
 }
 
 export default RepoService;
