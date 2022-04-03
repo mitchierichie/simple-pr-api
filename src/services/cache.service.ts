@@ -1,11 +1,13 @@
 import NodeCache, { Key } from 'node-cache';
 
+const secondsInTenMinutes = 600;
 const secondsInAnHour = 3600;
 const oneHundredThousand = 100000;
 
 class CacheService {
   private static nodeCache = new NodeCache({
     stdTTL: secondsInAnHour,
+    checkperiod: secondsInTenMinutes,
     maxKeys: oneHundredThousand,
   });
 
