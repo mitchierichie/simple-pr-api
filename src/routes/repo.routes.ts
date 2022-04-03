@@ -14,7 +14,6 @@ class RepoRoutes implements Routes {
   private initializeRoutes() {
     this.router.get(`${this.path}`, this.repoController.index);
     this.router.get(`${this.path}/:owner/:repo/pulls`, this.repoController.getPulls);
-    this.router.get(`${this.path}/:owner/:repo/pulls/:state`, this.repoController.getPulls);
   }
 }
 
