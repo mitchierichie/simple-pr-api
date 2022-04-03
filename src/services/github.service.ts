@@ -1,4 +1,4 @@
-import { GITHUB_TOKEN } from '@/config';
+import { GITHUB_HAS_TOKEN, GITHUB_TOKEN } from '@/config';
 import { RequestOptions } from 'https';
 import QueryString from 'qs';
 import CacheService, { CacheKey } from './cache.service';
@@ -13,16 +13,29 @@ class GitHubService {
       headers: {
         Accept: 'application/vnd.github.v3+json',
         'User-Agent': 'mitchieriche/simple-pr-api',
-        Authorization: `Basic ${GITHUB_TOKEN}`,
       },
       ...options,
     };
 
-    return this.tryToMergeETag(mergedOptions);
+    return this.mergeOptionalRequestOptions(mergedOptions);
   }
 
   protected createPathRegex() {
     return new RegExp(`/^https:\/\/${GITHUB_API_BASE_URL}\/`);
+  }
+
+  private mergeOptionalRequestOptions(options: RequestOptions) {
+    options = this.tryToMergeAuthorizationHeader(options);
+
+    return this.tryToMergeETag(options);
+  }
+
+  private tryToMergeAuthorizationHeader(options: RequestOptions) {
+    if (GITHUB_HAS_TOKEN) {
+      options.headers.Authorization = `Basic ${GITHUB_TOKEN}`;
+    }
+
+    return options;
   }
 
   private tryToMergeETag(options: RequestOptions) {
