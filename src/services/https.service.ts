@@ -1,11 +1,9 @@
+import { CacheHitResponse, IncomingRequestOptions, RequestOptions } from '@/interfaces/https.interface';
 import { IncomingMessage } from 'http';
 import https from 'https';
 import { Key } from 'node-cache';
-import { URL, urlToHttpOptions } from 'url';
+import { urlToHttpOptions } from 'url';
 import CacheService from './cache.service';
-
-declare type IncomingRequestOptions = string | https.RequestOptions | URL;
-declare type RequestOptions = string | https.RequestOptions;
 
 class HttpsService {
   private options: RequestOptions;
@@ -15,7 +13,7 @@ class HttpsService {
   private body = [];
   private path: string;
 
-  private initializeOptions = (options: IncomingRequestOptions) => {
+  private initializeOptions(options: IncomingRequestOptions) {
     if (typeof options === 'string') {
       this.options = options;
 
@@ -31,7 +29,7 @@ class HttpsService {
     if ('href' in options) {
       this.options = urlToHttpOptions(options);
     }
-  };
+  }
 
   private errorCallback(error: Error) {
     this.reject(error);
@@ -58,10 +56,10 @@ class HttpsService {
     this.initializeOptions(options);
     this.initializePath();
 
-    return new Promise(this.promisifyRequestCallback);
+    return new Promise((resolve, reject) => this.promisifyRequestCallback(resolve, reject));
   }
 
-  private promisifyRequestCallback(resolve: (value: unknown) => void, reject: (reason?: any) => void) {
+  private promisifyRequestCallback<DataType = any>(resolve: (value: unknown) => void, reject: (reason?: any) => void) {
     this.resolve = resolve;
     this.reject = reject;
     // promisify the request
@@ -71,7 +69,7 @@ class HttpsService {
       const cacheKey = this.checkResponseCache();
 
       if (CacheService.isKey(cacheKey)) {
-        resolve(this.returnCacheHitResponse(cacheKey as Key));
+        resolve(this.returnCacheHitResponse<DataType>(cacheKey as Key));
 
         return;
       }
@@ -89,7 +87,7 @@ class HttpsService {
     this.endCallback();
   }
 
-  private returnCacheHitResponse(cacheKey: Key) {
+  private returnCacheHitResponse<DataType>(cacheKey: Key): CacheHitResponse<DataType> {
     return {
       data: CacheService.get(cacheKey),
       cacheHit: true,
