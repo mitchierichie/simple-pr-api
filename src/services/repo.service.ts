@@ -12,11 +12,13 @@ class RepoService {
     const path = `/repos/${owner}/${repo}/pulls`;
     const httpsService = new HttpsService();
 
-    return httpsService.get(
+    const pulls = await httpsService.get(
       this.mergeRequestOptions({
         path,
       }),
     );
+
+    return this.normalizePulls(pulls);
   };
 
   private mergeRequestOptions(options: { path: string; body?: string }) {
@@ -30,7 +32,39 @@ class RepoService {
       ...options,
     };
 
-    return this.tryToMergeETag(mergedOptions);
+    return mergedOptions;
+    // return this.tryToMergeETag(mergedOptions);
+  }
+
+  private async normalizePulls(pulls: any[]) {
+    const pullsDetailPromises = [];
+
+    pulls.forEach(pull => {
+      pullsDetailPromises.push(this.fetchPullDetails(pull));
+    });
+
+    return Promise.all(pullsDetailPromises).then(pullsDetails => {
+      return pullsDetails.map(pullDetails => ({
+        id: pullDetails.id,
+        number: pullDetails.number,
+        author: pullDetails.user?.login,
+        commit_count: pullDetails.commits,
+      }));
+    });
+  }
+
+  private fetchPullDetails(pull) {
+    const httpsService = new HttpsService();
+
+    return httpsService.get(
+      this.mergeRequestOptions({
+        path: pull.url.replace(this.createGitHubPathRegex, '/'),
+      }),
+    );
+  }
+
+  private createGitHubPathRegex() {
+    return new RegExp(`/^https:\/\/${GITHUB_API_BASE_URL}\/`);
   }
 
   private tryToMergeETag(options: RequestOptions) {
@@ -40,8 +74,6 @@ class RepoService {
       options.headers['If-None-Match'] = eTag;
     }
 
-    console.log('tryToMergeETag:options', options);
-
     return options;
   }
 
@@ -50,7 +82,10 @@ class RepoService {
   }
 
   public static getETag(path: string) {
-    return this.eTags[path];
+    const eTag = `${this.eTags[path]}`;
+    delete this.eTags[path];
+
+    return eTag;
   }
 }
 

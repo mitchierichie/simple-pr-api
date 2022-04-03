@@ -24,7 +24,6 @@ class HttpsService {
 
   private parseBody() {
     const stringBody = Buffer.concat(this.body).toString();
-    console.log('parseBody:stringBody', stringBody);
     const parsedBody = JSON.parse(stringBody);
 
     return parsedBody;
