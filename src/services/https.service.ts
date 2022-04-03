@@ -12,6 +12,7 @@ class HttpsService {
   private reject: (reason?: any) => void;
   private body = [];
   private path: string;
+  shouldStoreETag: boolean;
 
   private initializeOptions(options: IncomingRequestOptions) {
     if (typeof options === 'string') {
@@ -52,9 +53,10 @@ class HttpsService {
     return parsedBody;
   }
 
-  public async get(options: RequestOptions): Promise<any> {
+  public async get(options: RequestOptions, storeETag = false): Promise<any> {
     this.initializeOptions(options);
     this.initializePath();
+    this.initializeShouldStoreETag(storeETag);
 
     return new Promise((resolve, reject) => this.promisifyRequestCallback(resolve, reject));
   }
@@ -113,13 +115,17 @@ class HttpsService {
   }
 
   private saveETag() {
-    if (this.response.headers.etag) {
+    if (this.shouldStoreETag && this.response.headers.etag) {
       CacheService.set(this.path, this.response.headers.etag);
     }
   }
 
   private initializePath() {
     this.path = typeof this.options === 'string' ? this.options : this.options.path;
+  }
+
+  private initializeShouldStoreETag(shouldStoreETag: boolean) {
+    this.shouldStoreETag = shouldStoreETag;
   }
 }
 
