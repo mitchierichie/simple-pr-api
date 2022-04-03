@@ -21,7 +21,6 @@ class RepoController {
 
       res.status(200).json({ data: pulls, message: 'getPulls' });
     } catch (error) {
-      console.log(error);
       next(error);
     }
   };
