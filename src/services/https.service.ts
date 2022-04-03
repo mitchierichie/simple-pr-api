@@ -1,6 +1,7 @@
 import { IncomingMessage } from 'http';
 import https from 'https';
 import { URL } from 'url';
+import CacheService from './cache.service';
 import RepoService from './repo.service';
 
 declare type RequestOptions = string | https.RequestOptions | URL;
@@ -49,7 +50,7 @@ class HttpsService {
 
   private saveETag(options: RequestOptions, etag: string) {
     const path = this.normalizePath(options);
-    RepoService.addETag(path, etag);
+    CacheService.addETag(path, etag);
   }
 
   private normalizePath(options: RequestOptions) {
