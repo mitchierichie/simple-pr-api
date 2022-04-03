@@ -1,13 +1,12 @@
 import HttpsService from '@services/https.service';
 import { RequestOptions } from 'https';
+import CacheService from './cache.service';
 
 const GITHUB_API_BASE_URL = 'api.github.com';
 
 export type PullRequestState = 'all' | 'closed' | 'open';
 
 class RepoService {
-  private static eTags = {};
-
   public getPulls = async (owner: string, repo: string) => {
     const path = `/repos/${owner}/${repo}/pulls`;
     const httpsService = new HttpsService();
@@ -70,24 +69,13 @@ class RepoService {
   }
 
   private tryToMergeETag(options: RequestOptions) {
-    const eTag = RepoService.getETag(options.path);
+    const eTag = CacheService.getETag(options.path);
 
     if (eTag) {
       options.headers['If-None-Match'] = eTag;
     }
 
     return options;
-  }
-
-  public static addETag(path: string, etag: string) {
-    this.eTags[path] = etag;
-  }
-
-  public static getETag(path: string) {
-    const eTag = `${this.eTags[path]}`;
-    delete this.eTags[path];
-
-    return eTag;
   }
 }
 
