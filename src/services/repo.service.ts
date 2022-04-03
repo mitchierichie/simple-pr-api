@@ -6,22 +6,35 @@ import HttpsService from '@services/https.service';
 import { OutgoingHttpHeader } from 'http';
 import { RequestOptions } from 'https';
 import { Key } from 'node-cache';
+import qs from 'qs';
 import CacheService from './cache.service';
 
 const GITHUB_API_BASE_URL = 'api.github.com';
 
-export type PullRequestState = 'all' | 'closed' | 'open';
+declare type PullPathFunction<Type> = (owner: string, repo: string, query?: qs.ParsedQs) => Type;
+declare type PullsResponse = PullRequests | CacheHitResponse<NormalizedPullRequests>;
 
 class RepoService {
-  public getPulls = async (owner: string, repo: string) => {
-    const path = `/repos/${owner}/${repo}/pulls`;
+  public getPulls: PullPathFunction<Promise<string | NormalizedPullRequests>> = async (owner, repo, query) => {
+    const path = this.buildPath(owner, repo, query);
     const options = this.mergeRequestOptions({
       path,
     });
     const httpsService = new HttpsService();
-    const pullsResponse = await httpsService.get(options);
+
+    const pullsResponse = await httpsService.get(options, true);
 
     return this.normalizePullsResponse(pullsResponse, path);
+  };
+
+  private buildPath: PullPathFunction<string> = (owner, repo, query) => {
+    const path = `/repos/${owner}/${repo}/pulls`;
+
+    if (!query) {
+      return path;
+    }
+
+    return `${path}?${qs.stringify(query)}`;
   };
 
   private mergeRequestOptions(options: { path: string; body?: string }) {
@@ -39,13 +52,13 @@ class RepoService {
     return this.tryToMergeETag(mergedOptions);
   }
 
-  private normalizePullsResponse(pullsResponse: PullRequests | CacheHitResponse<NormalizedPullRequests>, path: Key) {
+  private async normalizePullsResponse(pullsResponse: PullsResponse, path: Key): Promise<string | NormalizedPullRequests> {
     if (typeof pullsResponse === 'string') {
       return pullsResponse;
     }
 
     if ('cacheHit' in pullsResponse) {
-      return pullsResponse.cacheHit ? pullsResponse.data : pullsResponse;
+      return pullsResponse.data;
     }
 
     if (typeof pullsResponse.forEach === 'function') {
