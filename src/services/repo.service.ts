@@ -1,4 +1,7 @@
 import { GITHUB_TOKEN } from '@/config';
+import { CacheHitResponse } from '@/interfaces/https.interface';
+import { PullRequestDetail } from '@/interfaces/pull.interface';
+import { NormalizedPullRequest, NormalizedPullRequests, PullRequests } from '@/interfaces/pulls.interface';
 import HttpsService from '@services/https.service';
 import { OutgoingHttpHeader } from 'http';
 import { RequestOptions } from 'https';
@@ -36,7 +39,15 @@ class RepoService {
     return this.tryToMergeETag(mergedOptions);
   }
 
-  private normalizePullsResponse(pullsResponse, path) {
+  private normalizePullsResponse(pullsResponse: PullRequests | CacheHitResponse<NormalizedPullRequests>, path: Key) {
+    if (typeof pullsResponse === 'string') {
+      return pullsResponse;
+    }
+
+    if ('cacheHit' in pullsResponse) {
+      return pullsResponse.cacheHit ? pullsResponse.data : pullsResponse;
+    }
+
     if (typeof pullsResponse.forEach === 'function') {
       let eTag = CacheService.get(path);
       eTag = CacheService.isKey(eTag) ? eTag : undefined;
@@ -44,14 +55,10 @@ class RepoService {
       return this.normalizePulls(pullsResponse, eTag as OutgoingHttpHeader | undefined);
     }
 
-    if (typeof pullsResponse === 'string') {
-      return pullsResponse;
-    }
-
-    return pullsResponse.cacheHit ? pullsResponse.data : pullsResponse;
+    return [];
   }
 
-  private async normalizePulls(pulls: any[], eTag?: OutgoingHttpHeader) {
+  private async normalizePulls(pulls: PullRequests, eTag?: OutgoingHttpHeader): Promise<NormalizedPullRequests> {
     const pullsDetailPromises = [];
 
     pulls.forEach(pull => {
@@ -59,7 +66,7 @@ class RepoService {
     });
 
     return Promise.all(pullsDetailPromises).then(pullsDetails => {
-      const normalizedPulls = pullsDetails.map(this.mapPullDetails);
+      const normalizedPulls = pullsDetails.map(this.normalizePull);
 
       if (CacheService.isKey(eTag)) {
         CacheService.set(eTag as Key, normalizedPulls);
@@ -79,8 +86,9 @@ class RepoService {
     );
   }
 
-  private mapPullDetails = pullDetails => ({
+  private normalizePull = (pullDetails: PullRequestDetail): NormalizedPullRequest => ({
     id: pullDetails.id,
+    title: pullDetails.title,
     number: pullDetails.number,
     author: pullDetails.user?.login,
     commit_count: pullDetails.commits,
