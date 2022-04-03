@@ -1,3 +1,5 @@
+export type PullRequestState = 'all' | 'closed' | 'open';
+
 export interface PullRequestDetail {
   url: string;
   id: number;
@@ -7,7 +9,7 @@ export interface PullRequestDetail {
   patch_url: string;
   issue_url: string;
   number: number;
-  state: string;
+  state: PullRequestState;
   locked: boolean;
   title: string;
   user: PullRequestDetailUser;

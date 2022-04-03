@@ -1,3 +1,5 @@
+import { PullRequestState } from './pull.interface';
+
 export type NormalizedPullRequests = NormalizedPullRequest[];
 export type PullRequests = PullRequest[];
 
@@ -18,7 +20,7 @@ export interface PullRequest {
   patch_url: string;
   issue_url: string;
   number: number;
-  state: string;
+  state: PullRequestState;
   locked: boolean;
   title: string;
   user: PullRequestUser;
