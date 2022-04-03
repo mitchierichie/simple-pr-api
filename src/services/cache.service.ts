@@ -2,7 +2,7 @@ import NodeCache, { Key as NodeCacheKey } from 'node-cache';
 
 const secondsInTenMinutes = 600;
 const secondsInAnHour = 3600;
-const oneHundredThousand = 100000;
+const tenThousand = 10000;
 
 export type CacheKey = NodeCacheKey;
 declare type Key = NodeCacheKey;
@@ -11,7 +11,7 @@ class CacheService {
   private static nodeCache = new NodeCache({
     stdTTL: secondsInAnHour,
     checkperiod: secondsInTenMinutes,
-    maxKeys: oneHundredThousand,
+    maxKeys: tenThousand,
   });
 
   public static has(key: Key) {
