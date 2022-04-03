@@ -13,24 +13,12 @@ class CacheService {
     return this.nodeCache.has(key);
   }
 
-  public static set(key: Key, value: any) {
-    return this.nodeCache.set(key, value);
+  public static set<Type>(key: Key, value: Type) {
+    return this.nodeCache.set<Type>(key, value);
   }
 
   public static get<Type>(key: Key) {
     return this.nodeCache.get<Type>(key);
-  }
-
-  public static getMultiple(keys: Key[]) {
-    return this.nodeCache.mget(keys);
-  }
-
-  public static getAll() {
-    return this.nodeCache.mget(this.nodeCache.keys());
-  }
-
-  public static stats() {
-    return this.nodeCache.getStats();
   }
 
   public static isKey(key: any) {
