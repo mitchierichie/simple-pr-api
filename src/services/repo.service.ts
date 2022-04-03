@@ -44,12 +44,7 @@ class RepoService {
     });
 
     return Promise.all(pullsDetailPromises).then(pullsDetails => {
-      return pullsDetails.map(pullDetails => ({
-        id: pullDetails.id,
-        number: pullDetails.number,
-        author: pullDetails.user?.login,
-        commit_count: pullDetails.commits,
-      }));
+      return pullsDetails.map(this.mapPullDetails);
     });
   }
 
@@ -62,6 +57,13 @@ class RepoService {
       }),
     );
   }
+
+  private mapPullDetails = pullDetails => ({
+    id: pullDetails.id,
+    number: pullDetails.number,
+    author: pullDetails.user?.login,
+    commit_count: pullDetails.commits,
+  });
 
   private createGitHubPathRegex() {
     return new RegExp(`/^https:\/\/${GITHUB_API_BASE_URL}\/`);
