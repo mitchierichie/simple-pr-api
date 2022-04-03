@@ -1,5 +1,8 @@
+import { GITHUB_TOKEN } from '@/config';
 import HttpsService from '@services/https.service';
+import { OutgoingHttpHeader } from 'http';
 import { RequestOptions } from 'https';
+import { Key } from 'node-cache';
 import CacheService from './cache.service';
 
 const GITHUB_API_BASE_URL = 'api.github.com';
@@ -9,15 +12,13 @@ export type PullRequestState = 'all' | 'closed' | 'open';
 class RepoService {
   public getPulls = async (owner: string, repo: string) => {
     const path = `/repos/${owner}/${repo}/pulls`;
+    const options = this.mergeRequestOptions({
+      path,
+    });
     const httpsService = new HttpsService();
+    const pullsResponse = await httpsService.get(options);
 
-    const pulls = await httpsService.get(
-      this.mergeRequestOptions({
-        path,
-      }),
-    );
-
-    return this.normalizePulls(pulls);
+    return this.normalizePullsResponse(pullsResponse, path);
   };
 
   private mergeRequestOptions(options: { path: string; body?: string }) {
@@ -27,15 +28,30 @@ class RepoService {
       headers: {
         Accept: 'application/vnd.github.v3+json',
         'User-Agent': 'mitchieriche/simple-pr-api',
+        Authorization: `Basic ${GITHUB_TOKEN}`,
       },
       ...options,
     };
 
-    return mergedOptions;
-    // return this.tryToMergeETag(mergedOptions);
+    return this.tryToMergeETag(mergedOptions);
   }
 
-  private async normalizePulls(pulls: any[]) {
+  private normalizePullsResponse(pullsResponse, path) {
+    if (typeof pullsResponse.forEach === 'function') {
+      let eTag = CacheService.get(path);
+      eTag = CacheService.isKey(eTag) ? eTag : undefined;
+
+      return this.normalizePulls(pullsResponse, eTag as OutgoingHttpHeader | undefined);
+    }
+
+    if (typeof pullsResponse === 'string') {
+      return pullsResponse;
+    }
+
+    return pullsResponse.cacheHit ? pullsResponse.data : pullsResponse;
+  }
+
+  private async normalizePulls(pulls: any[], eTag?: OutgoingHttpHeader) {
     const pullsDetailPromises = [];
 
     pulls.forEach(pull => {
@@ -43,7 +59,13 @@ class RepoService {
     });
 
     return Promise.all(pullsDetailPromises).then(pullsDetails => {
-      return pullsDetails.map(this.mapPullDetails);
+      const normalizedPulls = pullsDetails.map(this.mapPullDetails);
+
+      if (CacheService.isKey(eTag)) {
+        CacheService.set(eTag as Key, normalizedPulls);
+      }
+
+      return normalizedPulls;
     });
   }
 
@@ -69,9 +91,9 @@ class RepoService {
   }
 
   private tryToMergeETag(options: RequestOptions) {
-    const eTag = CacheService.getETag(options.path);
+    const eTag = CacheService.get<Key>(options.path);
 
-    if (eTag) {
+    if (eTag && CacheService.isKey(eTag) && CacheService.has(eTag)) {
       options.headers['If-None-Match'] = eTag;
     }
 
