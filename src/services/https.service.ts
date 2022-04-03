@@ -1,7 +1,7 @@
 import { CacheHitResponse, IncomingRequestOptions, RequestOptions } from '@/interfaces/https.interface';
 import { IncomingMessage } from 'http';
 import https from 'https';
-import { Key } from 'node-cache';
+import { CacheKey } from './cache.service';
 import { urlToHttpOptions } from 'url';
 import CacheService from './cache.service';
 
@@ -71,7 +71,7 @@ class HttpsService {
       const cacheKey = this.checkResponseCache();
 
       if (CacheService.isKey(cacheKey)) {
-        resolve(this.returnCacheHitResponse<DataType>(cacheKey as Key));
+        resolve(this.returnCacheHitResponse<DataType>(cacheKey as CacheKey));
 
         return;
       }
@@ -89,7 +89,7 @@ class HttpsService {
     this.endCallback();
   }
 
-  private returnCacheHitResponse<DataType>(cacheKey: Key): CacheHitResponse<DataType> {
+  private returnCacheHitResponse<DataType>(cacheKey: CacheKey): CacheHitResponse<DataType> {
     return {
       data: CacheService.get(cacheKey),
       cacheHit: true,
@@ -111,7 +111,7 @@ class HttpsService {
 
     const key = this.options.headers['If-None-Match'];
 
-    return CacheService.isKey(key) && CacheService.has(key as Key) && key;
+    return CacheService.isKey(key) && CacheService.has(key as CacheKey) && key;
   }
 
   private saveETag() {
