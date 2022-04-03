@@ -21,6 +21,10 @@ class CacheService {
     return this.nodeCache.get<Type>(key);
   }
 
+  public static instance() {
+    return this.nodeCache;
+  }
+
   public static isKey(key: any) {
     return ['string', 'number'].includes(typeof key);
   }
