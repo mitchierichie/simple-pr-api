@@ -4,7 +4,7 @@ declare type Key = NodeCacheKey;
 export type CacheKey = NodeCacheKey;
 
 const secondsInAnHour = 3600;
-const tenThousand = 2;
+const tenThousand = 10000;
 const FULL_CACHE_ERROR = 'ECACHEFULL';
 
 class CacheService {

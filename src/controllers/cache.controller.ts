@@ -9,6 +9,14 @@ class CacheController {
       next(error);
     }
   };
+
+  public getKeys: RouteFunction = async (req, res, next) => {
+    try {
+      res.status(200).json(CacheService.instance().keys());
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 export default CacheController;

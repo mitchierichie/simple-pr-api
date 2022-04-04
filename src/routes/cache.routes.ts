@@ -13,6 +13,7 @@ class CacheRoutes implements Routes {
 
   private initializeRoutes() {
     this.router.get(`${this.path}`, this.controller.getStats);
+    this.router.get(`${this.path}/keys`, this.controller.getKeys);
   }
 }
 
