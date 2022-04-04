@@ -41,7 +41,7 @@ class CacheService {
     return this.nodeCache;
   }
 
-  public static isKey(key: any) {
+  public static isKey(key: unknown) {
     return ['string', 'number'].includes(typeof key);
   }
 }

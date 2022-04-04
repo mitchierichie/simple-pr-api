@@ -53,15 +53,15 @@ class HttpsService {
     return parsedBody;
   }
 
-  public async get(options: RequestOptions, storeETag = false): Promise<any> {
+  public async get<DataType>(options: RequestOptions, storeETag = false): Promise<DataType> {
     this.initializeOptions(options);
     this.initializePath();
     this.initializeShouldStoreETag(storeETag);
 
-    return new Promise((resolve, reject) => this.promisifyRequestCallback(resolve, reject));
+    return new Promise((resolve, reject) => this.promisifyRequestCallback<DataType>(resolve, reject));
   }
 
-  private promisifyRequestCallback<DataType = any>(resolve: (value: unknown) => void, reject: (reason?: any) => void) {
+  private promisifyRequestCallback<DataType>(resolve: (value: unknown) => void, reject: (reason?: any) => void) {
     this.resolve = resolve;
     this.reject = reject;
     // promisify the request
