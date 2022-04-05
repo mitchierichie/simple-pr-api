@@ -1,6 +1,6 @@
 import { CacheHitResponse } from '@/interfaces/https.interface';
 import { PullRequestDetail } from '@/interfaces/pull.interface';
-import { NormalizedPullRequest, NormalizedPullRequests, PullRequests } from '@/interfaces/pulls.interface';
+import { NormalizedPullRequest, NormalizedPullRequests, PullRequest, PullRequests } from '@/interfaces/pulls.interface';
 import HttpsService from '@services/https.service';
 import { OutgoingHttpHeader } from 'http';
 import QueryString from 'qs';
@@ -18,7 +18,7 @@ class RepoService extends GitHubService {
     });
     const httpsService = new HttpsService();
 
-    const pullsResponse = await httpsService.get(options, true);
+    const pullsResponse = await httpsService.get<PullsResponse>(options, true);
 
     return this.normalizePullsResponse(pullsResponse, path);
   };
@@ -53,7 +53,7 @@ class RepoService extends GitHubService {
   }
 
   private async normalizePulls(pulls: PullRequests, eTag?: OutgoingHttpHeader): Promise<NormalizedPullRequests> {
-    const pullsDetailPromises = [];
+    const pullsDetailPromises: Promise<PullRequestDetail>[] = [];
 
     pulls.forEach(pull => {
       pullsDetailPromises.push(this.fetchPullDetails(pull));
@@ -70,12 +70,12 @@ class RepoService extends GitHubService {
     });
   }
 
-  private fetchPullDetails(pull) {
+  private fetchPullDetails(pull: PullRequest): Promise<PullRequestDetail> {
     const httpsService = new HttpsService();
 
-    return httpsService.get(
+    return httpsService.get<PullRequestDetail>(
       this.mergeRequestOptions({
-        path: pull.url.replace(this.createPathRegex, '/'),
+        path: pull.url.replace(this.createPathRegex(), '/'),
       }),
     );
   }

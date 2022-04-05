@@ -37,9 +37,7 @@ class HttpsService {
   }
 
   private dataCallback() {
-    this.response.on('data', data => {
-      this.body.push(data);
-    });
+    this.response.on('data', data => this.body.push(data));
   }
 
   private endCallback() {
@@ -58,27 +56,14 @@ class HttpsService {
     this.initializePath();
     this.initializeShouldStoreETag(storeETag);
 
-    return new Promise((resolve, reject) => this.promisifyRequestCallback<DataType>(resolve, reject));
+    return new Promise((resolve, reject) => this.promisifyRequest<DataType>(resolve, reject));
   }
 
-  private promisifyRequestCallback<DataType>(resolve: (value: unknown) => void, reject: (reason?: any) => void) {
+  private promisifyRequest<DataType>(resolve: (value: unknown) => void, reject: (reason?: any) => void) {
     this.resolve = resolve;
     this.reject = reject;
-    // promisify the request
 
-    const request = https.get(this.options, (response: IncomingMessage) => {
-      this.response = response;
-      const cacheKey = this.checkResponseCache();
-
-      if (CacheService.isKey(cacheKey)) {
-        resolve(this.returnCacheHitResponse<DataType>(cacheKey as CacheKey));
-
-        return;
-      }
-
-      this.addResponseCallbacks();
-      this.saveETag();
-    });
+    const request = https.get(this.options, (response: IncomingMessage) => this.handlePromisifiedRequest<DataType>(response));
 
     request.on('error', error => this.errorCallback(error));
     request.end();
@@ -87,6 +72,20 @@ class HttpsService {
   private addResponseCallbacks() {
     this.dataCallback();
     this.endCallback();
+  }
+
+  private handlePromisifiedRequest<DataType>(response: IncomingMessage) {
+    this.response = response;
+    const cacheKey = this.checkResponseCache();
+
+    if (CacheService.isKey(cacheKey)) {
+      this.resolve(this.returnCacheHitResponse<DataType>(cacheKey as CacheKey));
+
+      return;
+    }
+
+    this.addResponseCallbacks();
+    this.saveETag();
   }
 
   private returnCacheHitResponse<DataType>(cacheKey: CacheKey): CacheHitResponse<DataType> {
