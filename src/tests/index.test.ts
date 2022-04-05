@@ -1,6 +1,7 @@
 import request from 'supertest';
 import App from '@/app';
 import IndexRoutes from '@routes/index.routes';
+import routes from '@models/routes.model';
 
 afterAll(async () => {
   await new Promise<void>(resolve => setTimeout(() => resolve(), 500));
@@ -12,7 +13,7 @@ describe('Testing Index', () => {
       const indexRoutes = new IndexRoutes();
       const app = new App([indexRoutes]);
 
-      return request(app.getServer()).get(`${indexRoutes.path}`).expect(200);
+      return request(app.getServer()).get(`${indexRoutes.path}`).expect(200, routes);
     });
   });
 });
