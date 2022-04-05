@@ -1,3 +1,69 @@
+tags:
+- name: repos
+  description: GitHub API - Repositories
+- name: pulls
+  description: GitHub API - Pull Requests
+
+paths:
+  # [GET] /repos/:owner/:repo/pulls
+  /repos/{owner}/{repo}/pulls:
+    get:
+      tags:
+      - repos
+      - pulls
+      summary: Get pull requests for a repository
+      description: Note that the query string is passed through to GitHub, (e.g. for pagination) so all the _query_ parameters for this route may change.
+      parameters:
+      - name: owner
+        in: path
+        description: user name
+        required: true
+        type: string
+      - name: repo
+        in: path
+        description: repository name
+        required: true
+        type: string
+      - name: state
+        in: path
+        type: string		
+        description: Either open, closed, or all to filter by state.
+        default: open
+      - name: head
+        in: query
+        type: string	
+        description: Filter pulls by head user or head organization and branch name in the format of user:ref-name or organization:ref-name. For example, github:new-script-format or octocat:test-branch.
+      - name: base
+        in:	query	
+        type: string
+        description: Filter pulls by base branch name. Example - gh-pages.
+      - name: sort
+        in:	query	
+        type: string
+        description: What to sort results by. Can be either created, updated, popularity (comment count) or long-running (age, filtering by pulls updated in the last month).
+        default: created
+      - name: direction
+        in:	query	
+        type: string
+        description: The direction of the sort. Can be either asc or desc. Default desc when sort is created or sort is not specified, otherwise asc.
+      - name: per_page	
+        in:	query
+        type: integer	
+        description: Results per page (max 100)
+        default: 30
+      - name: page
+        in:	query	
+        type: integer
+        description: Page number of the results to fetch.
+        default: 1
+      responses:
+        200:
+          description: 'OK'
+        304: 
+          description: 'OK, None Modified'
+        500:
+          description: 'Server Error'
+
 schemes:
  - https
  - http
