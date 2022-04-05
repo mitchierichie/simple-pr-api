@@ -1,7 +1,7 @@
 import request from 'supertest';
 import App from '@/app';
 import RepoRoutes from '@routes/repo.routes';
-import repoRoutesModel from '@models/repoRoutes.model';
+import repoRouteDefinitions from '@models/repoRoutes.model';
 
 const testRepo = 'expressjs/express';
 
@@ -15,7 +15,7 @@ describe('Testing Repo Routes', () => {
       const repoRoutes = new RepoRoutes();
       const app = new App([repoRoutes]);
 
-      return request(app.getServer()).get(repoRoutes.path).expect(200, { data: repoRoutesModel, message: 'index' });
+      return request(app.getServer()).get(repoRoutes.path).expect(200, { data: repoRouteDefinitions, message: 'index' });
     });
   });
 

@@ -7,7 +7,10 @@ class RepoController {
 
   public index: RouteFunction = async (req, res, next): Promise<void> => {
     try {
-      res.status(200).json({ data: repoRoutes, message: 'index' });
+      res.status(200).json({
+        data: repoRoutes,
+        message: 'index',
+      });
     } catch (error) {
       next(error);
     }
